@@ -1,0 +1,11 @@
+{
+  "devDependencies": {
+    "tslint": "latest",
+    "typescript": "latest"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Seulgi Kim (dev@seulgi.kim)",
+  "license": "ISC"
+}

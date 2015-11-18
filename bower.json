@@ -1,0 +1,21 @@
+{
+  "name": "insert.js",
+  "description": "Insert contents into page asynchronously.",
+  "main": "index.js",
+  "authors": [
+    "Seulgi Kim (dev@seulgi.kim)"
+  ],
+  "license": "ISC",
+  "keywords": [
+    "web"
+  ],
+  "homepage": "",
+  "ignore": [
+    "**/.*",
+    "**/*.ts",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ]
+}
