@@ -63,18 +63,43 @@ function get_config(script_tag: HTMLElement): IConfig {
   };
 }
 
+interface MarkdownCache {
+  date: number;
+  data: string;
+}
+
 function set_content(content: Promise<string>, container: HTMLDivElement, config: IConfig): void {
   function set_html_content(html: string) {
     container.innerHTML = html;
   }
   function set_markdown_content(markdown: string) {
+    const PREFIX = 'insert-';
+    const SOURCE = config.src;
+    let local_storage = window.localStorage;
+    let cache = JSON.parse(localStorage.getItem(PREFIX + SOURCE));
+    const NOW = new Date().getTime();
+    if (cache !== null) {
+      const RANDOM_MINUTE = Math.ceil(Math.random() * 100);
+      if (cache.date + (10 * (60 + RANDOM_MINUTE) * 60 * 1000) > NOW) {
+        container.innerHTML = cache.data;
+        return;
+      }
+      localStorage.removeItem(PREFIX + SOURCE);
+    }
+
     let request = new XMLHttpRequest();
     request.onload = () => {
       let response = request.response;
+
+      if (request.status === 403) {
+        container.innerHTML = 'Cannot convert markdown to html, because API rate limit exceeded';
+        return;
+      }
+      local_storage.setItem(PREFIX + SOURCE, JSON.stringify({ date: NOW, data: response }));
       container.innerHTML = response;
     };
     request.onerror = (e) => {
-      container.innerText = e.toString();
+      container.innerText = 'Cannot convert markdown to html';
     };
     request.open('POST', 'https://api.github.com/markdown/raw', true);
     request.setRequestHeader('Accept', 'application/vnd.github.v3+json');
