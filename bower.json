@@ -1,7 +1,8 @@
 {
   "name": "insert.js",
+  "version": "0.0.1",
   "description": "Insert contents into page asynchronously.",
-  "main": "index.js",
+  "main": "insert.js",
   "authors": [
     "Seulgi Kim (dev@seulgi.kim)"
   ],
@@ -13,9 +14,10 @@
   "ignore": [
     "**/.*",
     "**/*.ts",
+    ".last_build",
     "node_modules",
-    "bower_components",
-    "test",
-    "tests"
-  ]
+    "bower_components"
+  ],
+  "author": "Seulgi Kim (dev@seulgi.kim)",
+  "license": "ISC"
 }

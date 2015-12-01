@@ -1,7 +1,15 @@
 {
+  "name": "insert.js",
+  "version": "0.0.1",
+  "description": "Insert contents into page asynchronously.",
+  "main": "insert.js",
   "devDependencies": {
-    "tslint": "latest",
-    "typescript": "latest"
+    "bower": "^1.6.5",
+    "browserify": "^12.0.1",
+    "minifier": "^0.7.1",
+    "minify": "^2.0.1",
+    "tslint": "^2.5.1",
+    "typescript": "^1.6.2"
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"

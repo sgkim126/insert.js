@@ -1,0 +1,11 @@
+/.gitignore
+/.npmignore
+/.tslintrc.json
+/node_modules/
+/bower_components/
+/Makefile
+/lib.d/
+/bower.json
+*.ts
+*.d.ts
+/.last_build
