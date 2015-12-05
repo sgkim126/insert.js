@@ -27,6 +27,7 @@ enum Format {
 };
 
 interface IConfig {
+  prefix: string;
   src: string;
   format: Format;
 };
@@ -51,14 +52,29 @@ function get_format(format: string): Format {
   return Format.Html;
 }
 
+function get_prefix(data: DOMStringMap): string {
+  /* tslint:disable no-string-literal */
+  let prefix = data['prefix'];
+  /* tslint:enable no-string-literal */
+
+  if (prefix) {
+    return prefix + '_';
+  }
+
+  // default prefix is insert_
+  return 'insert_';
+}
+
 function get_config(script_tag: HTMLElement): IConfig {
   let data: DOMStringMap = script_tag.dataset;
   /* tslint:disable no-string-literal */
   let src = data['src'];
   let format = get_format(data['format']);
+  let prefix = get_prefix(data);
   /* tslint:enable no-string-literal */
   return {
     format: format,
+    prefix: prefix,
     src: src
   };
 }
@@ -73,7 +89,7 @@ function set_content(content: Promise<string>, container: HTMLDivElement, config
     container.innerHTML = html;
   }
   function set_markdown_content(markdown: string) {
-    const PREFIX = 'insert-';
+    const PREFIX = config.prefix;
     const SOURCE = config.src;
     let local_storage = window.localStorage;
     let cache = JSON.parse(localStorage.getItem(PREFIX + SOURCE));
