@@ -65,7 +65,7 @@ function get_prefix(data: DOMStringMap): string {
   return 'insert_';
 }
 
-function get_config(script_tag: HTMLElement): IConfig {
+function get_config(script_tag: HTMLScriptElement): IConfig {
   let data: DOMStringMap = script_tag.dataset;
   /* tslint:disable no-string-literal */
   let src = data['src'];
@@ -136,7 +136,7 @@ function set_content(content: Promise<string>, container: HTMLDivElement, config
 }
 
 (() => {
-  let script_tag: any = (<any>document).currentScript;
+  let script_tag: HTMLScriptElement = (<any>document).currentScript;
   let config = get_config(script_tag);
   let container = initialize_container();
   script_tag.parentNode.insertBefore(container, script_tag);
