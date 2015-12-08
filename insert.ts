@@ -86,10 +86,10 @@
   }
 
   function setContent(content: Promise<string>, container: HTMLDivElement, config: Config): void {
-    function setHtmlContent(html: string) {
+    function setHtmlContent(html: string): void {
       container.innerHTML = html;
     }
-    function setMarkdownContent(markdown: string) {
+    function setMarkdownContent(markdown: string): void {
       const PREFIX = config.prefix;
       const SOURCE = config.src;
       let localStorage: Storage = window.localStorage;
