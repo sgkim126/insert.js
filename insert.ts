@@ -1,11 +1,11 @@
 ((document: Document, window: Window) => {
-  function initialize_container(): HTMLDivElement {
+  function initializeContainer(): HTMLDivElement {
     const container: HTMLDivElement = document.createElement('div');
     container.textContent = "now loading...";
     return container;
   }
 
-  function load_html(url: string): Promise<string> {
+  function loadHtml(url: string): Promise<string> {
     let promise = new Promise((resolve, reject) => {
       let request = new XMLHttpRequest();
       request.onload = () => {
@@ -27,13 +27,13 @@
     Markdown
   };
 
-  interface IConfig {
+  interface Config {
     prefix: string;
     src: string;
     format: Format;
   };
 
-  function get_format(format: string): Format {
+  function getFormat(format: string): Format {
     // default format is html
     if (format === undefined) {
       return Format.Html;
@@ -53,7 +53,7 @@
     return Format.Html;
   }
 
-  function get_prefix(data: DOMStringMap): string {
+  function getPrefix(data: DOMStringMap): string {
     /* tslint:disable no-string-literal */
     let prefix = data['prefix'];
     /* tslint:enable no-string-literal */
@@ -66,12 +66,12 @@
     return 'insert_';
   }
 
-  function get_config(script_tag: HTMLScriptElement): IConfig {
-    let data: DOMStringMap = script_tag.dataset;
+  function getConfig(scriptTag: HTMLScriptElement): Config {
+    let data: DOMStringMap = scriptTag.dataset;
     /* tslint:disable no-string-literal */
     let src = data['src'];
-    let format = get_format(data['format']);
-    let prefix = get_prefix(data);
+    let format = getFormat(data['format']);
+    let prefix = getPrefix(data);
     /* tslint:enable no-string-literal */
     return {
       format: format,
@@ -85,14 +85,14 @@
     data: string;
   }
 
-  function set_content(content: Promise<string>, container: HTMLDivElement, config: IConfig): void {
-    function set_html_content(html: string) {
+  function setContent(content: Promise<string>, container: HTMLDivElement, config: Config): void {
+    function setHtmlContent(html: string) {
       container.innerHTML = html;
     }
-    function set_markdown_content(markdown: string) {
+    function setMarkdownContent(markdown: string) {
       const PREFIX = config.prefix;
       const SOURCE = config.src;
-      let local_storage = window.localStorage;
+      let localStorage: Storage = window.localStorage;
       let cache = JSON.parse(localStorage.getItem(PREFIX + SOURCE));
       const NOW = new Date().getTime();
       if (cache !== null) {
@@ -112,7 +112,7 @@
           container.innerHTML = 'Cannot convert markdown to html, because API rate limit exceeded';
           return;
         }
-        local_storage.setItem(PREFIX + SOURCE, JSON.stringify({ date: NOW, data: response }));
+        localStorage.setItem(PREFIX + SOURCE, JSON.stringify({ date: NOW, data: response }));
         container.innerHTML = response;
       };
       request.onerror = (e) => {
@@ -125,10 +125,10 @@
 
     switch (config.format) {
       case Format.Html:
-        content.then(set_html_content);
+        content.then(setHtmlContent);
       break;
       case Format.Markdown:
-        content.then(set_markdown_content);
+        content.then(setMarkdownContent);
       break;
     }
     content.catch((e) => {
@@ -136,10 +136,10 @@
     });
   }
 
-  let script_tag: HTMLScriptElement = (<any>document).currentScript;
-  let config = get_config(script_tag);
-  let container = initialize_container();
-  script_tag.parentNode.insertBefore(container, script_tag);
-  let content = load_html(config.src);
-  set_content(content, container, config);
+  let scriptTag: HTMLScriptElement = (<any>document).currentScript;
+  let config = getConfig(scriptTag);
+  let container = initializeContainer();
+  scriptTag.parentNode.insertBefore(container, scriptTag);
+  let content = loadHtml(config.src);
+  setContent(content, container, config);
 })(document, window);

@@ -52,7 +52,10 @@
     "radix": true,
     "semicolon": true,
     "triple-equals": [true, "allow-null-check"],
-    "variable-name": false,
+    "variable-name": [true,
+      "check-format",
+      "ban-keywords"
+    ],
     "whitespace": [true,
       "check-branch",
       "check-decl",
