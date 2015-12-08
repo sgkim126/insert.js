@@ -5,6 +5,28 @@
     return container;
   }
 
+  function getDataFromCache(cache: Storage, key: string): string {
+    let data = JSON.parse(cache.getItem(key));
+
+    if (data === null) {
+      return null;
+    }
+
+    const randomMinute = Math.random() * 100;
+    const now = new Date().getTime();
+    if (data.date + (10 * (60 + randomMinute) * 60 * 1000) < now) {
+      cache.removeItem(key);
+      return null;
+    }
+
+    return data.data;
+  }
+
+  function setDataToCache(cache: Storage, key: string, data: string): void {
+    const now = new Date().getTime();
+    cache.setItem(key, JSON.stringify({ date: now, data: data }));
+  }
+
   function loadHtml(url: string): Promise<string> {
     let promise = new Promise((resolve, reject) => {
       let request = new XMLHttpRequest();
@@ -90,18 +112,15 @@
       container.innerHTML = html;
     }
     function setMarkdownContent(markdown: string): void {
-      const PREFIX = config.prefix;
-      const SOURCE = config.src;
-      let localStorage: Storage = window.localStorage;
-      let cache = JSON.parse(localStorage.getItem(PREFIX + SOURCE));
-      const NOW = new Date().getTime();
-      if (cache !== null) {
-        const RANDOM_MINUTE = Math.ceil(Math.random() * 100);
-        if (cache.date + (10 * (60 + RANDOM_MINUTE) * 60 * 1000) > NOW) {
-          container.innerHTML = cache.data;
-          return;
-        }
-        localStorage.removeItem(PREFIX + SOURCE);
+      const prefix = config.prefix;
+      const source = config.src;
+      const key = prefix + source;
+      let cache: Storage = window.localStorage;
+      let html = getDataFromCache(cache, key);
+
+      if (html !== null) {
+        container.innerHTML = html;
+        return;
       }
 
       let request = new XMLHttpRequest();
@@ -112,7 +131,7 @@
           container.innerHTML = 'Cannot convert markdown to html, because API rate limit exceeded';
           return;
         }
-        localStorage.setItem(PREFIX + SOURCE, JSON.stringify({ date: NOW, data: response }));
+        setDataToCache(cache, key, response);
         container.innerHTML = response;
       };
       request.onerror = (e) => {
