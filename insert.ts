@@ -52,8 +52,17 @@
     return promise;
   }
 
-  function loadSource(url: string): Promise<string> {
+  function loadSource(url: string, prefix: string): Promise<string> {
+    const key = prefix + 'src_' + url;
+    const cache: Storage = window.localStorage;
+    const source = getDataFromCache(cache, key);
+
+    if (source !== null) {
+      return Promise.resolve(source);
+    }
+
     return request('GET', url, null).then((request) => {
+      setDataToCache(cache, key, request.response);
       return request.response;
     });
   }
@@ -169,6 +178,6 @@
   let config = getConfig(scriptTag);
   let container = initializeContainer();
   scriptTag.parentNode.insertBefore(container, scriptTag);
-  let content = loadSource(config.src);
+  let content = loadSource(config.src, config.prefix);
   setContent(content, container, config);
 })(document, window);
