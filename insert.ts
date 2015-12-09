@@ -52,7 +52,7 @@
     return promise;
   }
 
-  function loadHtml(url: string): Promise<string> {
+  function loadSource(url: string): Promise<string> {
     return request('GET', url, null).then((request) => {
       return request.response;
     });
@@ -169,6 +169,6 @@
   let config = getConfig(scriptTag);
   let container = initializeContainer();
   scriptTag.parentNode.insertBefore(container, scriptTag);
-  let content = loadHtml(config.src);
+  let content = loadSource(config.src);
   setContent(content, container, config);
 })(document, window);
