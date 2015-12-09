@@ -27,21 +27,35 @@
     cache.setItem(key, JSON.stringify({ date: now, data: data }));
   }
 
-  function loadHtml(url: string): Promise<string> {
+  interface RequestHeader {
+    Accept?: string;
+  }
+
+  function request(method: string, url: string, data: any, header: RequestHeader = {}): Promise<XMLHttpRequest> {
     let promise = new Promise((resolve, reject) => {
       let request = new XMLHttpRequest();
       request.onload = () => {
-        let response: string = request.response;
-        resolve(response);
+        resolve(request);
       };
       request.onerror = (e) => {
         reject(e);
       };
-      request.open('GET', url, true);
-      request.send();
+      request.open(method, url, true);
+      for (let key in header) {
+        if (header.hasOwnProperty(key)) {
+          request.setRequestHeader(key, header[key]);
+        }
+      }
+      request.send(data);
     });
 
     return promise;
+  }
+
+  function loadHtml(url: string): Promise<string> {
+    return request('GET', url, null).then((request) => {
+      return request.response;
+    });
   }
 
   enum Format {
@@ -123,8 +137,8 @@
         return;
       }
 
-      let request = new XMLHttpRequest();
-      request.onload = () => {
+      request('POST', 'https://api.github.com/markdown/raw', markdown)
+      .then((request) => {
         let response = request.response;
 
         if (request.status === 403) {
@@ -133,13 +147,9 @@
         }
         setDataToCache(cache, key, response);
         container.innerHTML = response;
-      };
-      request.onerror = (e) => {
+      }, (error: Event) => {
         container.innerText = 'Cannot convert markdown to html';
-      };
-      request.open('POST', 'https://api.github.com/markdown/raw', true);
-      request.setRequestHeader('Accept', 'application/vnd.github.v3+json');
-      request.send(markdown);
+      });
     }
 
     switch (config.format) {
