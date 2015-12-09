@@ -69,40 +69,40 @@
     format: Format;
   };
 
-  function getFormat(format: string): Format {
-    // default format is html
-    if (format === undefined) {
-      return Format.Html;
-    }
-
-    format = format.toLowerCase();
-
-    if (format === Format[Format.Html].toLowerCase()) {
-      return Format.Html;
-    }
-
-    if (format === Format[Format.Markdown].toLowerCase()) {
-      return Format.Markdown;
-    }
-
-    // default format is html
-    return Format.Html;
-  }
-
-  function getPrefix(data: DOMStringMap): string {
-    /* tslint:disable no-string-literal */
-    let prefix = data['prefix'];
-    /* tslint:enable no-string-literal */
-
-    if (prefix) {
-      return prefix + '_';
-    }
-
-    // default prefix is insert_
-    return 'insert_';
-  }
-
   function getConfig(scriptTag: HTMLScriptElement): Config {
+    function getFormat(format: string): Format {
+      // default format is html
+      if (format === undefined) {
+        return Format.Html;
+      }
+
+      format = format.toLowerCase();
+
+      if (format === Format[Format.Html].toLowerCase()) {
+        return Format.Html;
+      }
+
+      if (format === Format[Format.Markdown].toLowerCase()) {
+        return Format.Markdown;
+      }
+
+      // default format is html
+      return Format.Html;
+    }
+
+    function getPrefix(data: DOMStringMap): string {
+      /* tslint:disable no-string-literal */
+      let prefix = data['prefix'];
+      /* tslint:enable no-string-literal */
+
+      if (prefix) {
+        return prefix + '_';
+      }
+
+      // default prefix is insert_
+      return 'insert_';
+    }
+
     let data: DOMStringMap = scriptTag.dataset;
     /* tslint:disable no-string-literal */
     let src = data['src'];
