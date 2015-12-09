@@ -133,7 +133,7 @@
       let html = getDataFromCache(cache, key);
 
       if (html !== null) {
-        container.innerHTML = html;
+        setHtmlContent(html);
         return;
       }
 
@@ -142,14 +142,14 @@
         let response = request.response;
 
         if (request.status === 403) {
-          container.innerHTML = 'Cannot convert markdown to html, because API rate limit exceeded';
-          return;
+          return 'Cannot convert markdown to html, because API rate limit exceeded';
         }
+
         setDataToCache(cache, key, response);
-        container.innerHTML = response;
-      }, (error: Event) => {
-        container.innerText = 'Cannot convert markdown to html';
-      });
+        return response;
+      }).catch((error: Event) => {
+        return 'Cannot convert markdown to html';
+      }).then(setHtmlContent);
     }
 
     switch (config.format) {
