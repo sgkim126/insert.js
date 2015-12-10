@@ -76,16 +76,25 @@
   function loadSource(url: string, prefix: string): Promise<Content> {
     const key = prefix + 'src_' + url;
     const cache: Storage = window.localStorage;
-    const source = getDataFromCache(cache, key).data;
+    const cacheResult = getDataFromCache(cache, key);
+    const cachedData = cacheResult.data;
 
-    if (source !== null) {
-      return Promise.resolve({ data: source, from: ContentFrom.Cache });
+    switch (cacheResult.status) {
+      case CacheStatus.Valid:
+        return Promise.resolve({ data: cachedData, from: ContentFrom.Cache });
+      case CacheStatus.NotIn:
+        return request('GET', url, null).then((request) => {
+          setDataToCache(cache, key, request.response);
+          return { data: request.response, from: ContentFrom.Source };
+        });
+      case CacheStatus.Expired:
+        return request('GET', url, null).then((request) => {
+          const fetchedData = request.response;
+          const status = fetchedData === cachedData ? ContentFrom.Cache : ContentFrom.Source;
+          setDataToCache(fetchedData, key, fetchedData);
+          return { data: fetchedData, from: status };
+        });
     }
-
-    return request('GET', url, null).then((request) => {
-      setDataToCache(cache, key, request.response);
-      return { data: request.response, from: ContentFrom.Source };
-    });
   }
 
   enum Format {
