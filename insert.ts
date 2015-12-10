@@ -5,21 +5,32 @@
     return container;
   }
 
-  function getDataFromCache(cache: Storage, key: string): string {
+  enum CacheStatus {
+    NotIn,
+    Valid,
+    Expired,
+  }
+
+  interface CachedData {
+    data?: string;
+    status: CacheStatus;
+  }
+
+  function getDataFromCache(cache: Storage, key: string): CachedData {
     let data = JSON.parse(cache.getItem(key));
 
     if (data === null) {
-      return null;
+      return { data: null, status: CacheStatus.NotIn };
     }
 
     const randomMinute = Math.random() * 100;
     const now = new Date().getTime();
     if (data.date + (10 * (60 + randomMinute) * 60 * 1000) < now) {
       cache.removeItem(key);
-      return null;
+      return { data: data.data, status: CacheStatus.Expired };
     }
 
-    return data.data;
+    return { data: data.data, status: CacheStatus.Valid };
   }
 
   function setDataToCache(cache: Storage, key: string, data: string): void {
@@ -65,7 +76,7 @@
   function loadSource(url: string, prefix: string): Promise<Content> {
     const key = prefix + 'src_' + url;
     const cache: Storage = window.localStorage;
-    const source = getDataFromCache(cache, key);
+    const source = getDataFromCache(cache, key).data;
 
     if (source !== null) {
       return Promise.resolve({ data: source, from: ContentFrom.Cache });
@@ -150,7 +161,7 @@
       const source = config.src;
       const key = prefix + source;
       let cache: Storage = window.localStorage;
-      let html = getDataFromCache(cache, key);
+      let html = getDataFromCache(cache, key).data;
 
       if (html !== null) {
         setHtmlContent(html);
