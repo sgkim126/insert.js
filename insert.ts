@@ -52,18 +52,28 @@
     return promise;
   }
 
-  function loadSource(url: string, prefix: string): Promise<string> {
+  enum ContentFrom {
+    Cache,
+    Source
+  }
+
+  interface Content {
+    data: string;
+    from: ContentFrom;
+  }
+
+  function loadSource(url: string, prefix: string): Promise<Content> {
     const key = prefix + 'src_' + url;
     const cache: Storage = window.localStorage;
     const source = getDataFromCache(cache, key);
 
     if (source !== null) {
-      return Promise.resolve(source);
+      return Promise.resolve({ data: source, from: ContentFrom.Cache });
     }
 
     return request('GET', url, null).then((request) => {
       setDataToCache(cache, key, request.response);
-      return request.response;
+      return { data: request.response, from: ContentFrom.Source };
     });
   }
 
@@ -130,11 +140,12 @@
     data: string;
   }
 
-  function setContent(content: Promise<string>, container: HTMLDivElement, config: Config): void {
+  function setContent(content: Promise<Content>, container: HTMLDivElement, config: Config): void {
     function setHtmlContent(html: string): void {
       container.innerHTML = html;
     }
-    function setMarkdownContent(markdown: string): void {
+    function setMarkdownContent(content: Content): void {
+      const markdown = content.data;
       const prefix = config.prefix;
       const source = config.src;
       const key = prefix + source;
@@ -163,7 +174,7 @@
 
     switch (config.format) {
       case Format.Html:
-        content.then(setHtmlContent);
+        content.then((_: Content) => { setHtmlContent(_.data); });
       break;
       case Format.Markdown:
         content.then(setMarkdownContent);
