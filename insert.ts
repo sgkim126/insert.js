@@ -16,16 +16,14 @@
     status: CacheStatus;
   }
 
-  function getDataFromCache(cache: Storage, key: string): CachedData {
+  function getDataFromCache(cache: Storage, key: string, isExpired: (date: number) => boolean): CachedData {
     let data = JSON.parse(cache.getItem(key));
 
     if (data === null) {
       return { data: null, status: CacheStatus.NotIn };
     }
 
-    const randomMinute = Math.random() * 100;
-    const now = new Date().getTime();
-    if (data.date + (10 * (60 + randomMinute) * 60 * 1000) < now) {
+    if (isExpired(data.date)) {
       cache.removeItem(key);
       return { data: data.data, status: CacheStatus.Expired };
     }
@@ -76,7 +74,11 @@
   function loadSource(url: string, prefix: string): Promise<Content> {
     const key = prefix + 'src_' + url;
     const cache: Storage = window.localStorage;
-    const cacheResult = getDataFromCache(cache, key);
+    const cacheResult = getDataFromCache(cache, key, (date) => {
+      const randomMinute = Math.random() * 100;
+      const now = new Date().getTime();
+      return date + (10 * (60 + randomMinute) * 60 * 1000) < now;
+    });
     const cachedData = cacheResult.data;
 
     switch (cacheResult.status) {
@@ -170,7 +172,7 @@
       const source = config.src;
       const key = prefix + source;
       let cache: Storage = window.localStorage;
-      let html = getDataFromCache(cache, key).data;
+      let html = getDataFromCache(cache, key, (date) => content.from === ContentFrom.Source).data;
 
       if (html !== null) {
         setHtmlContent(html);
