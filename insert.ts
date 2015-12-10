@@ -170,7 +170,7 @@
       const markdown = content.data;
       const prefix = config.prefix;
       const source = config.src;
-      const key = prefix + source;
+      const key = prefix + 'markdown_' + source;
       let cache: Storage = window.localStorage;
       let html = getDataFromCache(cache, key, (date) => content.from === ContentFrom.Source).data;
 
