@@ -207,10 +207,18 @@
     });
   }
 
+  function insert(position: HTMLDivElement, config: Config): void {
+    let content = loadSource(config.src, config.prefix);
+    setContent(content, position, config);
+  }
+
   let scriptTag: HTMLScriptElement = (<any>document).currentScript;
   let config = getConfig(scriptTag);
-  let container = initializeContainer();
-  scriptTag.parentNode.insertBefore(container, scriptTag);
-  let content = loadSource(config.src, config.prefix);
-  setContent(content, container, config);
+  if (config.src !== undefined) {
+    let container = initializeContainer();
+    scriptTag.parentNode.insertBefore(container, scriptTag);
+    insert(container, config);
+  } else {
+    window['insert'] = insert;
+  }
 })(document, window);
