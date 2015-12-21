@@ -91,9 +91,9 @@
         });
       case CacheStatus.Expired:
         return request('GET', url, null).then((request) => {
-          const fetchedData = request.response;
+          const fetchedData: string = request.response;
           const status = fetchedData === cachedData ? ContentFrom.Cache : ContentFrom.Source;
-          setDataToCache(fetchedData, key, fetchedData);
+          setDataToCache(cache, key, fetchedData);
           return { data: fetchedData, from: status };
         });
     }
