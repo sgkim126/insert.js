@@ -15,6 +15,8 @@ SOURCE_NAMES := insert
 
 LIB_NAMES := es6-promise
 
+VERSION := $(shell node --eval "console.log(require('./package.json').version)")
+
 SOURCES := $(patsubst %, ./%.ts, $(SOURCE_NAMES))
 DECLARES := $(patsubst %, ./%.d.ts, $(SOURCE_NAMES))
 LIBS := $(foreach LIB, $(LIB_NAMES), ./lib.d/$(LIB)/$(LIB).d.ts)
@@ -22,7 +24,7 @@ JS := $(patsubst %.ts, %.js, $(SOURCES))
 
 LAST_BUILD := ./.last_build
 
-.PHONY: build minify lint clean install
+.PHONY: build minify lint clean install publish
 .DEFAULT: build
 
 build: install $(LAST_BUILD)
@@ -41,7 +43,11 @@ lint-internal: $(SOURCES)
 
 clean:
 	@rm -f $(LAST_BUILD_ALL) $(LAST_BUILD)
-	rm -f $(JS) $(DECLARES)
+	rm -f $(JS) $(DECLARES) insert.min.js insert.$(VERSION).js insert.$(VERSION).min.js
 
 install:
 	npm install
+
+publish: minify
+	cp insert.js insert.$(VERSION).js
+	cp insert.min.js insert.$(VERSION).min.js
