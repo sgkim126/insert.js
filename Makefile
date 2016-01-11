@@ -43,7 +43,7 @@ lint-internal: $(SOURCES)
 
 clean:
 	@rm -f $(LAST_BUILD_ALL) $(LAST_BUILD)
-	rm -f $(JS) $(DECLARES) insert.min.js insert.$(VERSION).js insert.$(VERSION).min.js
+	rm -f $(JS) $(DECLARES) *.js
 
 install:
 	npm install
