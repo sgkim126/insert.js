@@ -1,4 +1,20 @@
 ((document: Document, window: Window) => {
+
+  function isSupportAllFeatures(): Array<string> {
+    let lackOf: Array<string> = [];
+    if (!localStorage) {
+      lackOf.push('local storage');
+    }
+    if (!XMLHttpRequest) {
+      lackOf.push('XMLHttpRequest');
+    }
+    if (!Promise) {
+      lackOf.push('Promise');
+    }
+
+    return lackOf;
+  }
+
   function initializeContainer(): HTMLDivElement {
     const container: HTMLDivElement = document.createElement('div');
     container.textContent = "now loading...";
@@ -208,6 +224,13 @@
   }
 
   function insert(position: HTMLDivElement, config: Config): void {
+    let lackOf = isSupportAllFeatures();
+    if (lackOf.length !== 0) {
+      const message = `Cannot insert contents because this browser does not support ${lackOf.join(', ')}`
+      position.textContent = message;
+      return;
+    }
+
     let content = loadSource(config.src, config.prefix);
     setContent(content, position, config);
   }
