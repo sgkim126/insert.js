@@ -1,11 +1,11 @@
 {
   "name": "insert.js",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "Insert contents into page asynchronously.",
   "main": "insert.js",
   "repository": {
-    "type" : "git",
-    "url" : "https://github.com/sgkim126/insert.js.git"
+    "type": "git",
+    "url": "https://github.com/sgkim126/insert.js.git"
   },
   "devDependencies": {
     "babel-cli": "^6.4.0",
