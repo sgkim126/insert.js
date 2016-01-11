@@ -6,31 +6,38 @@ LINT := tslint
 LINT_FLAGS := --config ./.tslintrc.json
 
 CC := tsc
-FLAGS := --module commonjs --target ES5 --noImplicitAny --noEmitOnError --suppressImplicitAnyIndexErrors --removeComments
+FLAGS := --module commonjs --target ES6 --noImplicitAny --noEmitOnError --suppressImplicitAnyIndexErrors --removeComments --out $(ES6)
 
 MINIFIER := minify
 MINIFIER_FLAGS := --output insert.min.js
 
 SOURCE_NAMES := insert
 
-LIB_NAMES := es6-promise
+LIB_NAMES :=
 
 VERSION := $(shell node --eval "console.log(require('./package.json').version)")
 
 SOURCES := $(patsubst %, ./%.ts, $(SOURCE_NAMES))
 DECLARES := $(patsubst %, ./%.d.ts, $(SOURCE_NAMES))
 LIBS := $(foreach LIB, $(LIB_NAMES), ./lib.d/$(LIB)/$(LIB).d.ts)
+ES6 := $(patsubst %.ts, %.es6, $(SOURCES))
 JS := $(patsubst %.ts, %.js, $(SOURCES))
 
 LAST_BUILD := ./.last_build
 
+BABEL := babel
+BABEL_FLAGS := --presets es2015
+
 .PHONY: build minify lint clean install publish
 .DEFAULT: build
 
-build: install $(LAST_BUILD)
+build: install compile
+	$(BABEL) $(BABEL_FLAGS) $(ES6) --out-file  $(JS)
 
 minify: $(LAST_BUILD)
 	$(MINIFIER) $(MINIFIER_FLAGS) insert.js
+
+compile: install $(LAST_BUILD)
 
 $(LAST_BUILD): $(SOURCES)
 	$(CC) $(FLAGS) -d $? $(LIBS)
@@ -43,7 +50,7 @@ lint-internal: $(SOURCES)
 
 clean:
 	@rm -f $(LAST_BUILD_ALL) $(LAST_BUILD)
-	rm -f $(JS) $(DECLARES) *.js
+	rm -f $(ES6) $(JS) $(DECLARES) *.js
 
 install:
 	npm install
