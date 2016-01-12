@@ -38,6 +38,6 @@ node_modules
 *.es6
 !lib.d/**
 
-/.last_build
+/.last_install
 
 bower_components/
