@@ -147,64 +147,60 @@
     data: string;
   }
 
-  function setContent(content: Promise<Content>, container: HTMLDivElement, config: Config): void {
-    function setHtmlContent(html: string): void {
-      container.innerHTML = html;
-    }
-    function setMarkdownContent(content: Content): void {
-      const markdown = content.data;
-      const prefix = config.prefix;
-      const source = config.src;
-      const key = prefix + 'markdown_' + source;
-      let cache: Storage = window.localStorage;
-      let html = getDataFromCache(cache, key, (date) => content.from === ContentFrom.Source).data;
+  function setHtmlContent(html: string, container: HTMLDivElement): void {
+    container.innerHTML = html;
+  }
+  function setMarkdownContent(content: Content, container: HTMLDivElement, config: Config): void {
+    const markdown = content.data;
+    const prefix = config.prefix;
+    const source = config.src;
+    const key = prefix + 'markdown_' + source;
+    let cache: Storage = window.localStorage;
+    let html = getDataFromCache(cache, key, (date) => content.from === ContentFrom.Source).data;
 
-      if (html !== null) {
-        setHtmlContent(html);
-        return;
+    if (html !== null) {
+      setHtmlContent(html, container);
+      return;
+    }
+
+    const headers: { [index: string]: string } = {'Content-type': 'text/plain'};
+    fetch('https://api.github.com/markdown/raw', {method: 'POST', body: markdown, headers})
+    .then((request) => {
+      const text = request.text();
+      const status = request.status;
+      return text.then((text) => {
+        return {
+          text: text,
+          status: status
+        };
+      });
+    }).then((response) => {
+      const text = response.text;
+      if (response.status === 403) {
+        return 'Cannot convert markdown to html, because API rate limit exceeded';
       }
-
-      const headers: { [index: string]: string } = {'Content-type': 'text/plain'};
-      fetch('https://api.github.com/markdown/raw', {method: 'POST', body: markdown, headers})
-      .then((request) => {
-        const text = request.text();
-        const status = request.status;
-        return text.then((text) => {
-          return {
-            text: text,
-            status: status
-          };
-        });
-      }).then((response) => {
-        const text = response.text;
-        if (response.status === 403) {
-          return 'Cannot convert markdown to html, because API rate limit exceeded';
-        }
-        setDataToCache(cache, key, text);
-        return text;
-      }).catch((error: Event) => {
-        return 'Cannot convert markdown to html';
-      }).then(setHtmlContent);
-    }
-
+      setDataToCache(cache, key, text);
+      return text;
+    }).catch((error: Event) => {
+      return 'Cannot convert markdown to html';
+    }).then((_) => setHtmlContent(_, container));
+  }
+  function setContent(content: Content, container: HTMLDivElement, config: Config): void {
     switch (config.format) {
       case 'html':
-        content.then((_: Content) => { setHtmlContent(_.data); });
-      break;
+        setHtmlContent(content.data, container);
+        break;
       case 'markdown':
-        content.then(setMarkdownContent);
-      break;
+        setMarkdownContent(content, container, config);
+        break;
       default:
-        content.then(() => {
-          throw 'No valid format.';
-        });
+        throw 'No valid format.';
     }
-    content.catch((e) => {
-      container.innerText = e.toString();
-    });
   }
 
-  function insert(position: HTMLDivElement, config: Config): void {
+  function insertInternal(position: HTMLDivElement,
+                          config: Config,
+                          insert: (content: Content, position: HTMLDivElement, config: Config) => void): void {
     let lackOf = isSupportAllFeatures();
     if (lackOf.length !== 0) {
       const message = `Cannot insert contents because this browser does not support ${lackOf.join(', ')}`;
@@ -213,18 +209,51 @@
     }
 
     let content = loadSource(config.src, config.prefix);
-    setContent(content, position, config);
+    content.then((_: Content) => insert(_, position, config));
+    content.catch((e) => {
+      position.innerText = e.toString();
+    });
+  }
+  function insertHtml(position: HTMLDivElement, config: Config): void {
+    insertInternal(position, config, (content: Content, position: HTMLDivElement, config: Config) => {
+      setHtmlContent(content.data, position);
+    });
+  }
+  function insertMarkdown(position: HTMLDivElement, config: Config): void {
+    insertInternal(position, config, setMarkdownContent);
+  }
+  function insert(position: HTMLDivElement, config: Config): void {
+    insertInternal(position, config, setContent);
+  }
+
+  function insertHereInternal(config: Config, insert: (container: HTMLDivElement, config: Config) => void): void {
+    let scriptTag: HTMLScriptElement = (<any>document).currentScript;
+    let container = initializeContainer();
+    scriptTag.parentNode.insertBefore(container, scriptTag);
+    insert(container, config);
+  }
+  function insertHtmlHere(config: Config): void {
+    insertHereInternal(config, insertHtml);
+  }
+  function insertMarkdownHere(config: Config): void {
+    insertHereInternal(config, insertMarkdown);
+  }
+  function insertHere(config: Config): void {
+    insertHereInternal(config, insert);
   }
 
   let scriptTag: HTMLScriptElement = (<any>document).currentScript;
   let config = getConfig(scriptTag);
   if (config.src !== undefined) {
-    let container = initializeContainer();
-    scriptTag.parentNode.insertBefore(container, scriptTag);
-    insert(container, config);
+    insertHere(config);
   } else {
     /* tslint:disable no-string-literal */
     window['insert'] = insert;
+    window['insertHtml'] = insertHtml;
+    window['insertMarkdown'] = insertMarkdown;
+    window['insertHere'] = insertHere;
+    window['insertHtmlHere'] = insertHtmlHere;
+    window['insertMarkdownHere'] = insertMarkdownHere;
     /* tslint:enable no-string-literal */
   }
 })(document, window);
