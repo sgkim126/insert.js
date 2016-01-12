@@ -1,6 +1,6 @@
 {
   "name": "insert.js",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "Insert contents into page asynchronously.",
   "main": "insert.js",
   "repository": {
