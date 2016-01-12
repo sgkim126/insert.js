@@ -8,6 +8,9 @@ LINT_FLAGS := --config ./.tslintrc.json
 PACKAGE_JSON := ./package.json
 VERSION := $(shell node --eval "console.log(require('$(PACKAGE_JSON)').version)")
 
+LIB_NAMES = whatwg-fetch
+LIBS := $(foreach LIB, $(LIB_NAMES), ./lib.d/$(LIB)/$(LIB).d.ts)
+
 CC := tsc
 FLAGS := \
 	--module commonjs \
@@ -15,7 +18,8 @@ FLAGS := \
 	--noImplicitAny \
 	--removeComments \
 	--suppressImplicitAnyIndexErrors \
-	--target ES6
+	--target ES6 \
+	$(LIBS)
 
 MINIFIER := minify
 MINIFIER_FLAGS :=
@@ -54,7 +58,7 @@ publish: minify
 	cp insert.min.js insert.$(VERSION).min.js
 
 %.es6: %.ts
-	$(CC) $(FLAGS) $? $(LIBS) --out $@
+	$(CC) $(FLAGS) $? --out $@
 
 %.min.js: %.js
 	$(MINIFIER) $(MINIFIER_FLAGS) $? --output $@
