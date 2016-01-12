@@ -56,25 +56,27 @@
     Accept?: string;
   }
 
-  function request(method: string, url: string, data: any, header: RequestHeader = {}): Promise<XMLHttpRequest> {
-    let promise = new Promise((resolve, reject) => {
+  function request(url: string, init?: RequestInit): Promise<Response> {
+    return new Promise((resolve, reject) => {
       let request = new XMLHttpRequest();
       request.onload = () => {
-        resolve(request);
+        resolve({ text() {
+          return new Promise((resolve) => {
+            resolve(request.response);
+          });
+        }, status: request.status })
       };
       request.onerror = (e) => {
         reject(e);
       };
-      request.open(method, url, true);
-      for (let key in header) {
-        if (header.hasOwnProperty(key)) {
-          request.setRequestHeader(key, header[key]);
+      request.open(init.method, url, true);
+      for (let key in init.headers) {
+        if (init.headers.hasOwnProperty(key)) {
+          request.setRequestHeader(key, init.headers[key]);
         }
       }
-      request.send(data);
+      request.send(init.body);
     });
-
-    return promise;
   }
 
   enum ContentFrom {
@@ -97,17 +99,18 @@
     });
     const cachedData = cacheResult.data;
 
+    const headers: { [index: string]: string } = {'Content-type': 'text/plain'}
     switch (cacheResult.status) {
       case CacheStatus.Valid:
         return Promise.resolve({ data: cachedData, from: ContentFrom.Cache });
       case CacheStatus.NotIn:
-        return request('GET', url, null).then((request) => {
-          setDataToCache(cache, key, request.response);
-          return { data: request.response, from: ContentFrom.Source };
+        return request(url, {method: 'GET', headers}).then((request) => request.text()).then((request) => {
+          setDataToCache(cache, key, request);
+          return { data: request, from: ContentFrom.Source };
         });
       case CacheStatus.Expired:
-        return request('GET', url, null).then((request) => {
-          const fetchedData: string = request.response;
+        return request(url, {method: 'GET', headers}).then((request) => request.text()).then((request) => {
+          const fetchedData: string = request;
           const status = fetchedData === cachedData ? ContentFrom.Cache : ContentFrom.Source;
           setDataToCache(cache, key, fetchedData);
           return { data: fetchedData, from: status };
@@ -195,16 +198,24 @@
         return;
       }
 
-      request('POST', 'https://api.github.com/markdown/raw', markdown)
+      const headers: { [index: string]: string } = {'Content-type': 'text/plain'}
+      request('https://api.github.com/markdown/raw', {method: 'POST', body: markdown, headers})
       .then((request) => {
-        let response = request.response;
-
-        if (request.status === 403) {
+        const text = request.text();
+        const status = request.status;
+        return text.then((text) => {
+          return {
+            text: text,
+            status: status
+          };
+        });
+      }).then((response) => {
+        const text = response.text;
+        if (response.status === 403) {
           return 'Cannot convert markdown to html, because API rate limit exceeded';
         }
-
-        setDataToCache(cache, key, response);
-        return response;
+        setDataToCache(cache, key, text);
+        return text;
       }).catch((error: Event) => {
         return 'Cannot convert markdown to html';
       }).then(setHtmlContent);
