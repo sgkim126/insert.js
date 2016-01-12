@@ -52,10 +52,6 @@
     cache.setItem(key, JSON.stringify({ date: now, data: data }));
   }
 
-  interface RequestHeader {
-    Accept?: string;
-  }
-
   function request(url: string, init?: RequestInit): Promise<Response> {
     return new Promise((resolve, reject) => {
       let request = new XMLHttpRequest();
@@ -118,62 +114,27 @@
     }
   }
 
-  enum Format {
-    Html,
-    Markdown
-  };
-
   interface Config {
-    prefix: string;
-    src: string;
-    format: Format;
+    prefix?: string;
+    src?: string;
+    format?: string;
   };
 
   function getConfig(scriptTag: HTMLScriptElement): Config {
-    function getFormat(format: string): Format {
-      // default format is html
-      if (format === undefined) {
-        return Format.Html;
-      }
+    let config: Config = <any>scriptTag.dataset;
 
-      format = format.toLowerCase();
-
-      if (format === Format[Format.Html].toLowerCase()) {
-        return Format.Html;
-      }
-
-      if (format === Format[Format.Markdown].toLowerCase()) {
-        return Format.Markdown;
-      }
-
-      // default format is html
-      return Format.Html;
+    const DEFAULT_FORMAT = 'html';
+    if (!config.format) {
+      config.format = DEFAULT_FORMAT;
     }
 
-    function getPrefix(data: DOMStringMap): string {
-      /* tslint:disable no-string-literal */
-      let prefix = data['prefix'];
-      /* tslint:enable no-string-literal */
-
-      if (prefix) {
-        return prefix + '_';
-      }
-
-      // default prefix is insert_
-      return 'insert_';
+    const DEFAULT_PREFIX = 'insert';
+    if (!config.prefix) {
+      config.prefix = DEFAULT_PREFIX;
     }
+    config.prefix = `${config.prefix}_`;
 
-    let data: DOMStringMap = scriptTag.dataset;
-    /* tslint:disable no-string-literal */
-    let src = data['src'];
-    let format = getFormat(data['format']);
-    let prefix = getPrefix(data);
-    /* tslint:enable no-string-literal */
-    return {
-      format: format,
-      prefix: prefix,
-      src: src
-    };
+    return config;
   }
 
   interface MarkdownCache {
@@ -222,12 +183,16 @@
     }
 
     switch (config.format) {
-      case Format.Html:
+      case 'html':
         content.then((_: Content) => { setHtmlContent(_.data); });
       break;
-      case Format.Markdown:
+      case 'markdown':
         content.then(setMarkdownContent);
       break;
+      default:
+        content.then(() => {
+          throw 'No valid format.';
+        });
     }
     content.catch((e) => {
       container.innerText = e.toString();
