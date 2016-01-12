@@ -60,11 +60,11 @@
     return new Promise((resolve, reject) => {
       let request = new XMLHttpRequest();
       request.onload = () => {
-        resolve({ text() {
+        resolve({ text: (): Promise<string> => {
           return new Promise((resolve) => {
             resolve(request.response);
           });
-        }, status: request.status })
+        }, status: request.status });
       };
       request.onerror = (e) => {
         reject(e);
@@ -99,7 +99,7 @@
     });
     const cachedData = cacheResult.data;
 
-    const headers: { [index: string]: string } = {'Content-type': 'text/plain'}
+    const headers: { [index: string]: string } = {'Content-type': 'text/plain'};
     switch (cacheResult.status) {
       case CacheStatus.Valid:
         return Promise.resolve({ data: cachedData, from: ContentFrom.Cache });
@@ -198,7 +198,7 @@
         return;
       }
 
-      const headers: { [index: string]: string } = {'Content-type': 'text/plain'}
+      const headers: { [index: string]: string } = {'Content-type': 'text/plain'};
       request('https://api.github.com/markdown/raw', {method: 'POST', body: markdown, headers})
       .then((request) => {
         const text = request.text();
@@ -237,7 +237,7 @@
   function insert(position: HTMLDivElement, config: Config): void {
     let lackOf = isSupportAllFeatures();
     if (lackOf.length !== 0) {
-      const message = `Cannot insert contents because this browser does not support ${lackOf.join(', ')}`
+      const message = `Cannot insert contents because this browser does not support ${lackOf.join(', ')}`;
       position.textContent = message;
       return;
     }
@@ -253,6 +253,8 @@
     scriptTag.parentNode.insertBefore(container, scriptTag);
     insert(container, config);
   } else {
+    /* tslint:disable no-string-literal */
     window['insert'] = insert;
+    /* tslint:enable no-string-literal */
   }
 })(document, window);
