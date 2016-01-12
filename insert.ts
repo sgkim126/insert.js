@@ -5,8 +5,12 @@
     if (!localStorage) {
       lackOf.push('local storage');
     }
-    if (!XMLHttpRequest) {
-      lackOf.push('XMLHttpRequest');
+    if (!fetch) {
+      if (!XMLHttpRequest) {
+        lackOf.push('XMLHttpRequest');
+      } else {
+        window.fetch = myFetch;
+      }
     }
     if (!Promise) {
       lackOf.push('Promise');
@@ -52,7 +56,8 @@
     cache.setItem(key, JSON.stringify({ date: now, data: data }));
   }
 
-  function request(url: string, init?: RequestInit): Promise<Response> {
+
+  function myFetch(url: string, init?: RequestInit): Promise<Response> {
     return new Promise((resolve, reject) => {
       let request = new XMLHttpRequest();
       request.onload = () => {
@@ -100,12 +105,12 @@
       case CacheStatus.Valid:
         return Promise.resolve({ data: cachedData, from: ContentFrom.Cache });
       case CacheStatus.NotIn:
-        return request(url, {method: 'GET', headers}).then((request) => request.text()).then((request) => {
+        return fetch(url, {method: 'GET', headers}).then((request) => request.text()).then((request) => {
           setDataToCache(cache, key, request);
           return { data: request, from: ContentFrom.Source };
         });
       case CacheStatus.Expired:
-        return request(url, {method: 'GET', headers}).then((request) => request.text()).then((request) => {
+        return fetch(url, {method: 'GET', headers}).then((request) => request.text()).then((request) => {
           const fetchedData: string = request;
           const status = fetchedData === cachedData ? ContentFrom.Cache : ContentFrom.Source;
           setDataToCache(cache, key, fetchedData);
@@ -160,7 +165,7 @@
       }
 
       const headers: { [index: string]: string } = {'Content-type': 'text/plain'};
-      request('https://api.github.com/markdown/raw', {method: 'POST', body: markdown, headers})
+      fetch('https://api.github.com/markdown/raw', {method: 'POST', body: markdown, headers})
       .then((request) => {
         const text = request.text();
         const status = request.status;
