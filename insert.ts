@@ -94,7 +94,7 @@
   }
 
   function loadSource(url: string, prefix: string): Promise<Content> {
-    const key = prefix + 'src_' + url;
+    const key = `${prefix}src_${url}`;
     const cache: Storage = window.localStorage;
     const cacheResult = getDataFromCache(cache, key, (date) => {
       const randomMinute = Math.random() * 100;
@@ -157,7 +157,7 @@
     const markdown = content.data;
     const prefix = config.prefix;
     const source = config.src;
-    const key = prefix + 'markdown_' + source;
+    const key = `${prefix}markdown_${source}`;
     let cache: Storage = window.localStorage;
     let html = getDataFromCache(cache, key, (date) => content.from === ContentFrom.Source).data;
 
