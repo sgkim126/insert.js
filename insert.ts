@@ -43,7 +43,7 @@
     let data = JSON.parse(cache.getItem(key));
 
     if (data === null) {
-      return { data: null, status: CacheStatus.NotIn };
+      return { status: CacheStatus.NotIn };
     }
 
     if (isExpired(data.date)) {
@@ -55,8 +55,8 @@
   }
 
   function setDataToCache(cache: Storage, key: string, data: string): void {
-    const now = new Date().getTime();
-    cache.setItem(key, JSON.stringify({ date: now, data: data }));
+    const date = new Date().getTime();
+    cache.setItem(key, JSON.stringify({ date, data }));
   }
 
 
@@ -104,16 +104,17 @@
     const cachedData = cacheResult.data;
 
     const headers: { [index: string]: string } = {'Content-type': 'text/plain'};
+    const method = 'GET';
     switch (cacheResult.status) {
       case CacheStatus.Valid:
         return Promise.resolve({ data: cachedData, from: ContentFrom.Cache });
       case CacheStatus.NotIn:
-        return fetchFunction(url, {method: 'GET', headers}).then((request) => request.text()).then((request) => {
+        return fetchFunction(url, {method, headers}).then((request) => request.text()).then((request) => {
           setDataToCache(cache, key, request);
           return { data: request, from: ContentFrom.Source };
         });
       case CacheStatus.Expired:
-        return fetchFunction(url, {method: 'GET', headers}).then((request) => request.text()).then((request) => {
+        return fetchFunction(url, {method, headers}).then((request) => request.text()).then((request) => {
           const fetchedData: string = request;
           const status = fetchedData === cachedData ? ContentFrom.Cache : ContentFrom.Source;
           setDataToCache(cache, key, fetchedData);
@@ -154,28 +155,26 @@
     container.innerHTML = html;
   }
   function setMarkdownContent(content: Content, container: HTMLDivElement, config: Config): void {
-    const markdown = content.data;
     const prefix = config.prefix;
     const source = config.src;
     const key = `${prefix}markdown_${source}`;
     let cache: Storage = window.localStorage;
     let html = getDataFromCache(cache, key, (date) => content.from === ContentFrom.Source).data;
 
-    if (html !== null) {
+    if (html !== undefined) {
       setHtmlContent(html, container);
       return;
     }
 
     const headers: { [index: string]: string } = {'Content-type': 'text/plain'};
-    fetchFunction('https://api.github.com/markdown/raw', {method: 'POST', body: markdown, headers})
+    const method = 'POST';
+    const body = content.data;
+    fetchFunction('https://api.github.com/markdown/raw', {method, body, headers})
     .then((request) => {
       const text = request.text();
       const status = request.status;
       return text.then((text) => {
-        return {
-          text: text,
-          status: status
-        };
+        return { text, status };
       });
     }).then((response) => {
       const text = response.text;
