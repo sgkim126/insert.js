@@ -1,4 +1,5 @@
 ((document: Document, window: Window) => {
+  let fetchFunction: (url: string, init?: RequestInit) => Promise<Response>;
 
   function isSupportAllFeatures(): Array<string> {
     let lackOf: Array<string> = [];
@@ -9,8 +10,10 @@
       if (!XMLHttpRequest) {
         lackOf.push('XMLHttpRequest');
       } else {
-        window.fetch = myFetch;
+        fetchFunction = myFetch;
       }
+    } else {
+      fetchFunction = window.fetch;
     }
     if (!Promise) {
       lackOf.push('Promise');
@@ -105,12 +108,12 @@
       case CacheStatus.Valid:
         return Promise.resolve({ data: cachedData, from: ContentFrom.Cache });
       case CacheStatus.NotIn:
-        return fetch(url, {method: 'GET', headers}).then((request) => request.text()).then((request) => {
+        return fetchFunction(url, {method: 'GET', headers}).then((request) => request.text()).then((request) => {
           setDataToCache(cache, key, request);
           return { data: request, from: ContentFrom.Source };
         });
       case CacheStatus.Expired:
-        return fetch(url, {method: 'GET', headers}).then((request) => request.text()).then((request) => {
+        return fetchFunction(url, {method: 'GET', headers}).then((request) => request.text()).then((request) => {
           const fetchedData: string = request;
           const status = fetchedData === cachedData ? ContentFrom.Cache : ContentFrom.Source;
           setDataToCache(cache, key, fetchedData);
@@ -164,7 +167,7 @@
     }
 
     const headers: { [index: string]: string } = {'Content-type': 'text/plain'};
-    fetch('https://api.github.com/markdown/raw', {method: 'POST', body: markdown, headers})
+    fetchFunction('https://api.github.com/markdown/raw', {method: 'POST', body: markdown, headers})
     .then((request) => {
       const text = request.text();
       const status = request.status;
