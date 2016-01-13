@@ -129,9 +129,7 @@
     format?: string;
   };
 
-  function getConfig(scriptTag: HTMLScriptElement): Config {
-    let config: Config = <any>scriptTag.dataset;
-
+  function setDefaultConfig(config: Config): Config {
     const DEFAULT_FORMAT = 'html';
     if (!config.format) {
       config.format = DEFAULT_FORMAT;
@@ -201,8 +199,9 @@
   }
 
   function insertInternal(position: HTMLDivElement,
-                          config: Config,
+                          rawConfig: Config,
                           insert: (content: Content, position: HTMLDivElement, config: Config) => void): void {
+    const config = setDefaultConfig(rawConfig);
     let lackOf = isSupportAllFeatures();
     if (lackOf.length !== 0) {
       const message = `Cannot insert contents because this browser does not support ${lackOf.join(', ')}`;
@@ -245,7 +244,7 @@
   }
 
   let scriptTag: HTMLScriptElement = (<any>document).currentScript;
-  let config = getConfig(scriptTag);
+  let config: Config = <any>scriptTag.dataset;
   if (config.src !== undefined) {
     insertHere(config);
   } else {
